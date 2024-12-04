@@ -1,13 +1,12 @@
-
-
 class Chunk {
   constructor(entryModule) {
-    this.entryModule = entryModule
-    this.name = entryModule.name
-    this.files = []  // 记录每个 chunk的文件信息
-    this.modules = [] // 记录每个 chunk 里的所包含的 module
+    this.entryModule = entryModule // 入口模块
+    this.name = entryModule.name // 模块名称
+    this.files = []  // 记录每个 chunk 的文件信息
+    this.modules = [] // 当前入口，依赖的模块
   }
 }
+
 
 module.exports = Chunk
 

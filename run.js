@@ -3,7 +3,9 @@ let options = require('./webpack.config')
 
 let compiler = webpack(options)
 
+
 compiler.run((err, stats) => {
-  console.log(err)
-  console.log(stats)
+  console.log('Webpack')
+  // console.log(err)
+  // console.log(stats)
 })

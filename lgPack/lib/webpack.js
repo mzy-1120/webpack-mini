@@ -3,25 +3,29 @@ const NodeEnvironmentPlugin = require('./node/NodeEnvironmentPlugin')
 const WebpackOptionsApply = require('./WebpackOptionsApply')
 
 const webpack = function (options) {
-  // 01 实例化 Compiler 对象，传入 context
+  // 01 创建 Compiler 对象
   let compiler = new Compiler(options.context)
   // 挂载 options
   compiler.options = options
 
-  // 02 初始化 NodeEnvironmentPlugin(让compiler具体文件读写能力)
+
+  // 02 扩展读写功能
   new NodeEnvironmentPlugin().apply(compiler)
 
-  // 03 挂载所有 plugins 插件至 compiler 对象身上 
+
+  // 03 扩展自定义插件
   if (options.plugins && Array.isArray(options.plugins)) {
     for (const plugin of options.plugins) {
       plugin.apply(compiler)
     }
   }
 
-  // 04 挂载所有 webpack 内置的插件（入口）
+
+  // 04 开始编译
   new WebpackOptionsApply().process(options, compiler);
 
-  // 05 返回 compiler 对象即可
+
+  // 05 返回 compiler 对象
   return compiler
 }
 

@@ -2,6 +2,7 @@
   // 01 定义对象用于将来缓存被加载过的模块
   let installedModules = {}
 
+
   // 02 定义一个 __webpack_require__ 方法来替换 import require 加载操作
   function __webpack_require__(moduleId) {
     // 2-1 判断当前缓存中是否存在要被加载的模块内容，如果存在则直接返回
@@ -102,15 +103,20 @@
   return __webpack_require__(__webpack_require__.s = './src/index.js')
 
 })({
-  
-    "./src/index.js": (function (module, exports, __webpack_require__) {
-      let title = __webpack_require__("./src/title.js");
-console.log(title);
-console.log('执行了');
-    }),
-  
-    "./src/title.js": (function (module, exports, __webpack_require__) {
-      module.exports = 'title';
-    }),
-  
-})
+"./src/index.js": (function (module, exports, __webpack_require__) {
+  let math = __webpack_require__("./src/math.js");
+console.log('加法', math.addition(3, 4));
+console.log('减法', math.addition(8, 3));
+}),
+"./src/math.js": (function (module, exports, __webpack_require__) {
+  const addition = function addition(a, b) {
+  return a + b;
+};
+const subtraction = function subtraction(a, b) {
+  return a - b;
+};
+module.exports = {
+  addition,
+  subtraction
+};
+}),})

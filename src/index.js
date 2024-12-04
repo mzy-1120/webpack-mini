@@ -1,5 +1,6 @@
-let title = require('./title')
+let math = require('./math')
 
-console.log(title)
-console.log('执行了')
+
+console.log('加法', math.addition(3, 4));
+console.log('减法', math.addition(8, 3));
 
