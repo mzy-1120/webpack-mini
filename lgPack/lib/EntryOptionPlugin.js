@@ -6,7 +6,7 @@ const itemToPlugin = function (context, item, name) {
 
 class EntryOptionPlugin {
   apply(compiler) {
-    // 注册 entryOption 函数
+    // 注册 entryOption 方法
     compiler.hooks.entryOption.tap('EntryOptionPlugin', (context, entry) => {
 
       // 单入口

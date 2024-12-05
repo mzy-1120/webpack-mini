@@ -1,4 +1,3 @@
-
 // 处理单文件入口
 class SingleEntryPlugin {
   constructor(context, entry, name) {
@@ -10,8 +9,7 @@ class SingleEntryPlugin {
   apply(compiler) {
     // 注册 make 方法
     compiler.hooks.make.tapAsync('SingleEntryPlugin', (compilation, callback) => {
-      const { context, entry, name } = this
-      console.log("make 钩子监听执行了~~~~~~")
+      const {context, entry, name} = this
 
       // 调用 addEntry 方法
       compilation.addEntry(context, entry, name, callback)

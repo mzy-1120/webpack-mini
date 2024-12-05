@@ -46,40 +46,6 @@ class Compilation extends Tapable {
     });
   }
 
-  // 编译过程的最后阶段对编译结果进行最终的封装和处理
-  seal(callback) {
-    this.hooks.seal.call();
-    this.hooks.beforeChunks.call();
-
-    // 1、根据入口创建 chunk
-    for (const entryModule of this.entries) {
-      // 核心：创建 chunk 模块，记录模块信息
-      const chunk = new Chunk(entryModule);
-
-      // 保存 chunk 信息
-      this.chunks.push(chunk);
-
-      // 向 chunk 中添加模块
-      chunk.modules = this.modules.filter(
-        (module) => module.name === chunk.name
-      );
-    }
-
-    // 2、chunk 流程梳理之后就进入到 chunk 代码处理环节（模板文件 + 模块中的源代码 ==> chunk.js)
-    this.hooks.afterChunks.call(this.chunks);
-
-    // 3、生成代码内容
-    this._createChunkAssets();
-
-    callback();
-  }
-
-
-  // 负责将编译后的资源（assets）输出到指定的目标目录
-  emitAssets(fileName, source) {
-    this.assets[fileName] = source;
-    this.files.push(fileName);
-  }
 
   // 根据入口进行开始编译
   _addModuleChain(context, entry, name, callback) {
@@ -103,8 +69,7 @@ class Compilation extends Tapable {
 
   // 创建模块
   _createModule(data, doAddEntry, callback) {
-    // 实例化 new NormalModule() 对象：
-    // {context, name, moduleId, rawRequest, parser, resource, _source, _ast, dependencies}
+    // 实例化 NormalModule 对象，调用 create 方法
     let module = normalModuleFactory.create(data);
 
     // 构建 Module 成功后回调
@@ -124,7 +89,6 @@ class Compilation extends Tapable {
     this._buildModule(module, afterBuild);
 
     // 递归子模块时不会执行此方法
-    path.posix.dirname(this.resource),
     doAddEntry && doAddEntry(module);
 
     // 每次构建模块后都会被存入 compilation.modules 数组中
@@ -150,9 +114,9 @@ class Compilation extends Tapable {
       this._createModule(
         {
           parser,
-          name: dependency.name,
-          context: dependency.context,
-          rawRequest: dependency.rawRequest,
+          name: dependency.name, // 入口名称
+          context: dependency.context, // 配置文件的根目录
+          rawRequest: dependency.rawRequest, // 入口依赖的路径
           moduleId: dependency.moduleId,
           resource: dependency.resource,
         },
@@ -160,6 +124,35 @@ class Compilation extends Tapable {
         done
       );
     }, callback);
+  }
+
+  // 封装和处理（在 Compiler 组件内调用）
+  seal(callback) {
+    this.hooks.seal.call();
+    this.hooks.beforeChunks.call();
+
+    // 1、根据入口创建 chunk
+    for (const entryModule of this.entries) {
+      // 核心：创建 chunk 模块，记录模块信息
+      const chunk = new Chunk(entryModule);
+
+      // 保存 chunk 信息
+      this.chunks.push(chunk);
+
+      // 向 chunk 中添加模块
+      chunk.modules = this.modules.filter(
+        // module.name 就是入口的名称
+        (module) => module.name === chunk.name
+      );
+    }
+
+    // 2、chunk 流程梳理之后就进入到 chunk 代码处理环节（模板文件 + 模块中的源代码 ==> chunk.js)
+    this.hooks.afterChunks.call(this.chunks);
+
+    // 3、生成代码内容
+    this._createChunkAssets();
+
+    callback();
   }
 
   // 创建 chunk 转译后的代码
@@ -182,8 +175,14 @@ class Compilation extends Tapable {
       });
 
       // 输出文件
-      this.emitAssets(fileName, source);
+      this._emitAssets(fileName, source);
     }
+  }
+
+  // 负责将编译后的资源（assets）输出到指定的目标目录
+  _emitAssets(fileName, source) {
+    this.assets[fileName] = source;
+    this.files.push(fileName);
   }
 }
 

@@ -11,8 +11,6 @@ const mkdirp = require("mkdirp");
 const Stats = require("./Stats");
 const NormalModuleFactory = require("./NormalModuleFactory");
 const Compilation = require("./Compilation");
-const {emit} = require("process");
-const {log} = require("console");
 
 class Compiler extends Tapable {
   constructor(context) {
@@ -51,37 +49,50 @@ class Compiler extends Tapable {
 
     // 编译完成回调
     const onCompiled = (err, compilation) => {
-      // 最终在这里将处理好的 chunk 写入到指定的文件然后输出至 dist
-      this.emitAssets(compilation, (err) => {
+      // 输出至 dist
+      this._emitAssets(compilation, (err) => {
         let stats = new Stats(compilation);
         finalCallback(err, stats);
       });
     };
 
     // 进入 complie 阶段
+    // 1、执行 beforeRun 钩子
+    // 2、再执行 run 钩子
     this.hooks.beforeRun.callAsync(this, (err) => {
       this.hooks.run.callAsync(this, (err) => {
-        this.compile(onCompiled);
+        this._compile(onCompiled);
       });
     });
   }
 
   // 编译过程
-  compile(callback) {
+  _compile(callback) {
     // 1、返回的 params 中包含 normalModuleFactory.create 指向 new NormalModule
     // 2、内部实例化 NormalModule 对象
-    const params = this.newCompilationParams();
+    const params = this._newCompilationParams();
 
+
+    // 1、执行 beforeRun 钩子
     this.hooks.beforeRun.callAsync(params, (err) => {
 
+      // 调用 compile 钩子
       this.hooks.compile.call(params);
 
       // 返回 compilation 对象
-      const compilation = this.newCompilation(params);
+      const compilation = this._newCompilation(params);
 
+      // 通过 make 钩子，进入 Compilation 对象调用内部方法
+      // 1、调用 make 钩子
+      // 2、make 函数里面执行 addEntry 函数，
+      // 3、addEntry 里面执行 addModuleChain 函数
+      // 4、addModuleChain里面执行 buildModule 函数
+      // 5、buildModule 里面执行 build 函数，里面执行 build 函数，
+      // 6、最后执行 compilation.seal 方法
       this.hooks.make.callAsync(compilation, (err) => {
-        // 在这里我们开始处理 chunk
+        // 调用 compilation 上的 seal 方法
         compilation.seal((err) => {
+          // 调用 afterCompile 钩子
           this.hooks.afterCompile.callAsync(compilation, (err) => {
             callback(err, compilation);
           });
@@ -95,7 +106,7 @@ class Compiler extends Tapable {
    * 01 创建 dist
    * 02 在目录创建完成之后执行文件的写操作
    */
-  emitAssets(compilation, callback) {
+  _emitAssets(compilation, callback) {
     // 01 定义一个工具方法用于执行文件的生成操作
     const emitFlies = (err) => {
       const assets = compilation.assets;
@@ -104,6 +115,8 @@ class Compiler extends Tapable {
       for (let file in assets) {
         let source = assets[file];
         let targetPath = path.posix.join(outputPath, file);
+
+        // 写入文件
         this.outputFileSystem.writeFileSync(targetPath, source, "utf8");
       }
 
@@ -111,6 +124,7 @@ class Compiler extends Tapable {
     };
 
     // 02、创建目录之后启动文件写入
+    // 调用 emit 钩子
     this.hooks.emit.callAsync(compilation, (err) => {
       // 创建目录
       mkdirp.sync(this.options.output.path);
@@ -121,7 +135,7 @@ class Compiler extends Tapable {
   }
 
   // 创建 params 对象，内部返回 NormalModule 对象
-  newCompilationParams() {
+  _newCompilationParams() {
     const params = {
       normalModuleFactory: new NormalModuleFactory(),
     };
@@ -130,9 +144,9 @@ class Compiler extends Tapable {
   }
 
   // 返回 Compilation 对象
-  newCompilation(params) {
+  _newCompilation(params) {
     // 创建 Compilation 对象实例
-    const compilation = this.createCompilation();
+    const compilation = this._createCompilation();
 
     // 执行：thisCompilation、compilation 两个函数
     this.hooks.thisCompilation.call(compilation, params);
@@ -142,7 +156,7 @@ class Compiler extends Tapable {
   }
 
   // 创建 Compilation 对象
-  createCompilation() {
+  _createCompilation() {
     return new Compilation(this);
   }
 }
