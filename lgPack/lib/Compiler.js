@@ -19,7 +19,7 @@ class Compiler extends Tapable {
     // webpack.config.js 所在绝对路径
     this.context = context;
 
-    // 挂载 hoos 挂载函数
+    // 挂载 hoos 函数，在指定时机调用
     this.hooks = {
       done: new AsyncSeriesHook(["stats"]), // 异步、串行
       entryOption: new SyncBailHook(["context", "entry"]), // 同步
@@ -40,9 +40,13 @@ class Compiler extends Tapable {
   }
 
 
-  // 入口
+  /**
+   * 由使用者调用此方法开始进入编译阶段
+   * 1、从 run 阶段、进入 compile 阶段
+   * 2、compile 完成，调用 callback 函数
+   */
   run(callback) {
-    // 编译结束回调，执行 callback 函数
+    // 最终编译完成，调用外层传入的 callback 函数
     const finalCallback = function (err, stats) {
       callback(err, stats);
     };
@@ -56,9 +60,7 @@ class Compiler extends Tapable {
       });
     };
 
-    // 进入 complie 阶段
-    // 1、执行 beforeRun 钩子
-    // 2、再执行 run 钩子
+    // 从 run 阶段，进入 compile 阶段
     this.hooks.beforeRun.callAsync(this, (err) => {
       this.hooks.run.callAsync(this, (err) => {
         this._compile(onCompiled);
@@ -79,10 +81,10 @@ class Compiler extends Tapable {
       // 调用 compile 钩子
       this.hooks.compile.call(params);
 
-      // 返回 compilation 对象
+      // 返回 new Compilation 的实例化对象
       const compilation = this._newCompilation(params);
 
-      // 通过 make 钩子，进入 Compilation 对象调用内部方法
+      // 调用注册的 hooks.make.tapAsyn('SingleEntryPlugin') 方法，执行 compilation.addEntry 方法
       // 1、调用 make 钩子
       // 2、make 函数里面执行 addEntry 函数，
       // 3、addEntry 里面执行 addModuleChain 函数

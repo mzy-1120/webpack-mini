@@ -1,4 +1,4 @@
-// 1、Babylon 是Babel中使用的 JavaScript 解析器
+// 1、Babylon 是 Babel 中使用的 JavaScript 解析器
 // 2、支持 JSX 和 Flow
 // 3、API 应用程序编程接口
 //    babylon.parse(code, [options])：将提供的code解析为整个 ECMAScript 程序

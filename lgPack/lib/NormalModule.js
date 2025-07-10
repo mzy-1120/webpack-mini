@@ -14,7 +14,7 @@ class NormalModule {
     this.parser = data.parser; // 解析器
     this.resource = data.resource; // 文件入口的绝对路径
     this._source; // 存放某个模块的源代码
-    this._ast; // 存放某个模板源代码对应的 ast
+    this._ast; // 存放源代码对应的 ast
     this.dependencies = []; // 保存当前模块依赖的其他模块信息
   }
 
@@ -26,10 +26,10 @@ class NormalModule {
      * 04 依赖其他模块，需要递归完成
      */
     this._doBuild(compilation, (err) => {
-      // 将源文件解析成 ast 存储在 _ast 上
+      // 1、将 code 码转为 ast 抽象语法树
       this._ast = this.parser.parse(this._source);
 
-      // 修改 ast 最后再将修改后的 ast 转回成 code 代码
+      // 2、再将 ast 经过修改后，转回成 code 代码
       traverse(this._ast, {
         CallExpression: (nodePath) => {
           let node = nodePath.node;
