@@ -92,7 +92,7 @@ class Compiler extends Tapable {
       // 5、buildModule 里面执行 build 函数，里面执行 build 函数，
       // 6、最后执行 compilation.seal 方法
       this.hooks.make.callAsync(compilation, (err) => {
-        // 调用 compilation 上的 seal 方法
+        // 编译完成之后，调用 compilation 上的 seal 方法
         compilation.seal((err) => {
           // 调用 afterCompile 钩子
           this.hooks.afterCompile.callAsync(compilation, (err) => {

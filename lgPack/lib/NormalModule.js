@@ -10,7 +10,7 @@ class NormalModule {
     this.context = data.context;
     this.name = data.name;
     this.moduleId = data.moduleId;
-    this.rawRequest = data.rawRequest; // 文件名称
+    this.rawRequest = data.rawRequest; // webpack 配置的打包入口
     this.parser = data.parser; // 解析器
     this.resource = data.resource; // 文件入口的绝对路径
     this._source; // 存放某个模块的源代码

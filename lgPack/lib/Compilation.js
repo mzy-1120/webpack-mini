@@ -23,11 +23,11 @@ class Compilation extends Tapable {
     this.inputFileSystem = compiler.inputFileSystem;
     this.outputFileSystem = compiler.outputFileSystem;
 
-    this.entries = []; // 存入所有入口模块的数组
+    this.entries = []; // 根据 webpack 的入口，存储的 modules
     this.modules = []; // 存放所有编译后的模块信息
-    this.chunks = []; // 存放当前次打包过程中所产出的 chunk
-    this.assets = [];
-    this.files = []; // 存放所有输出文件的名称
+    this.chunks = []; // 根据 entry 生成的 entryModule 然后 new Chunk(entryModule)
+    this.assets = []; // 遍历 this.chunks 中 [fileName] = source 的集合
+    this.files = []; // 遍历 this.chunks 中 fileName 的集合
 
     this.hooks = {
       succeedModule: new SyncHook(["module"]),
@@ -55,7 +55,7 @@ class Compilation extends Tapable {
         parser, // 解析器
         name: name, // 文件名称
         context: context, // 配置文件的根目录
-        rawRequest: entry, // 入口依赖的路径
+        rawRequest: entry, // webpack 配置的打包入口
         resource: path.posix.join(context, entry), // 文件入口的绝对路径
         moduleId: "./" + path.posix.relative(context, path.posix.join(context, entry)),
       },
@@ -69,7 +69,7 @@ class Compilation extends Tapable {
 
   // 创建模块
   _createModule(data, doAddEntry, callback) {
-    // 实例化 NormalModule 对象，调用 create 方法
+    // 每次调用 create 方法，实例化 NormalModule 对象
     let module = normalModuleFactory.create(data);
 
     // 构建 Module 成功后回调
@@ -88,16 +88,16 @@ class Compilation extends Tapable {
     // 构建 Module （ 异步执行 ）
     this._buildModule(module, afterBuild);
 
-    // 递归子模块时不会执行此方法
-    doAddEntry && doAddEntry(module);
+    //  只有从 entry 进来的才存储 module
+    doAddEntry?.(module);
 
-    // 每次构建模块后都会被存入 compilation.modules 数组中
+    // 存储所有的 module
     this.modules.push(module);
   }
 
   // 调用 module.build 编译
   _buildModule(module, callback) {
-    // 编译 module
+    // 真正编译 module 的地方
     module.build(this, (err) => {
       // Module 编译完成，执行 succeedModule 方法
       this.hooks.succeedModule.call(module);
@@ -126,7 +126,7 @@ class Compilation extends Tapable {
     }, callback);
   }
 
-  // 封装和处理（在 Compiler 组件内调用）
+  // 编译后在 Compiler 组件内执行
   seal(callback) {
     this.hooks.seal.call();
     this.hooks.beforeChunks.call();
