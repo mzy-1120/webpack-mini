@@ -12,6 +12,12 @@ const Stats = require("./Stats");
 const NormalModuleFactory = require("./NormalModuleFactory");
 const Compilation = require("./Compilation");
 
+/**
+ * Compiler 类，负责管理编译的生命周期
+ * 1、创建模块
+ * 2、编译模块
+ * 3、生成代码
+ */
 class Compiler extends Tapable {
   constructor(context) {
     super();

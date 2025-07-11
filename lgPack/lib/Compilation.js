@@ -12,6 +12,12 @@ const normalModuleFactory = new NormalModuleFactory();
 // 代码解析器
 const parser = new Parser();
 
+/**
+ * Compilation 类，负责编译模块
+ * 1、创建模块
+ * 2、编译模块
+ * 3、生成代码
+ */
 class Compilation extends Tapable {
   constructor(compiler) {
     super();
@@ -37,7 +43,14 @@ class Compilation extends Tapable {
     };
   }
 
-  // Webpack 编译的起点
+  /**
+   * 第一部分：递归编译模块
+   * 1、在 Coompiler 组件内调用 addEntry 方法
+   * 2、其他方法依次在当前函数内调用
+   * 3、内部递归调用 _processDependencies 编译依赖模块
+   */
+
+  // Webpack 编译的起点，在 Compiler 中调用
   addEntry(context, entry, name, callback) {
     this._addModuleChain(context, entry, name, (err, module) => {
 
@@ -45,7 +58,6 @@ class Compilation extends Tapable {
       callback(err, module);
     });
   }
-
 
   // 根据入口进行开始编译
   _addModuleChain(context, entry, name, callback) {
@@ -125,6 +137,13 @@ class Compilation extends Tapable {
       );
     }, callback);
   }
+
+  /**
+   * 第二部分：将编译好的模块存储到固定位置
+   * 1、在 Coompiler 组件内调用 seal 方法
+   * 2、其他方法依次在当前函数内调用
+   * 3、存储到 assets、files 上
+   */
 
   // 编译后在 Compiler 组件内执行
   seal(callback) {
